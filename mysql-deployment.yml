@@ -1,0 +1,77 @@
+#creating a service for mySQL pod
+apiVersion: v1
+kind: Service
+metadata:
+  name: drupal-mysql
+  labels:
+    app: drupal
+spec:
+  ports:
+    - port: 3306
+  selector:
+    app: drupal
+    tier: mysql
+  clusterIP: None
+---
+#creating a pvc for MYSQl pod
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pv-claim
+  labels:
+    app: drupal
+spec:
+  accessModes:
+    - ReadWriteOnce #to give the storage as read write access mode
+  resources:
+    requests:
+      storage: 5Gi
+---
+#creating a deployment for the MYSQL pod
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: drupal-mysql
+  labels:
+    app: drupal
+spec:
+  selector:
+    matchLabels:
+      app: drupal
+      tier: mysql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: drupal
+        tier: mysql
+    spec:
+      containers:
+      - image: mysql:5.6 #for MYSQL the most compatatible version is 5.6
+        name: mysql
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password #it access the ppassword from the kustomization file
+        - name: MYSQL_DATABASE
+          value: ankitdb
+        - name: MYSQL_USER
+          value: ankitkumar
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-userpass
+              key: password  
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-persistent-storage
+        persistentVolumeClaim:
+          claimName: mysql-pv-claim
