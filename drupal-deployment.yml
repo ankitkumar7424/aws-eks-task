@@ -48,7 +48,7 @@ spec:
         tier: frontend
     spec:
       containers:
-      - image: drupal:latest #for drupal with MYSQL:5.6 latest version of the drupal is compatatible 
+      - image: drupal:8-apache #for drupal with MYSQL:5.6 8-apache version of the drupal is compatatible 
         name: drupal
         env:
         - name: DRUPAL_DB_HOST
